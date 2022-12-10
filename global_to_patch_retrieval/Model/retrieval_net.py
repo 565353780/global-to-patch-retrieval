@@ -54,9 +54,6 @@ class RetrievalNet(nn.Module):
             gt_foreground == 0, scan_model,
             torch.zeros(gt_foreground.shape).to(device))
 
-        print(foreground.shape)
-        print(gt_foreground.shape)
-
         loss_foreground = torch.mean(self.loss_separation(
             foreground, gt_foreground),
                                      dim=[1, 2, 3, 4]).mean()
