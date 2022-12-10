@@ -36,7 +36,6 @@ class Scan2CAD(Dataset):
         # in [fixed, interpolation, none]
         self.rotation_augmentation = "interpolation"
         self.mask_scans = False
-        self.load_mask = True
 
         # in [truncation_normalization_transform, to_occupancy_grid]
         self.transformation = to_occupancy_grid
@@ -79,6 +78,10 @@ class Scan2CAD(Dataset):
 
         return negatives
 
+    def regenerate_negatives(self):
+        self.negatives = self.add_negatives(self.pairs)
+        return True
+
     def __getitem__(self, index):
         objects = {}
 
@@ -87,11 +90,8 @@ class Scan2CAD(Dataset):
         scannet_object_path = self.scannet_root + scannet_object_name + ".sdf"
 
         # Load scan mask
-        if self.mask_scans or self.load_mask:
-            scannet_mask_path = self.scannet_root + scannet_object_name + ".mask"
-            objects["mask"], _ = self._load(scannet_mask_path)
-        else:
-            scannet_mask_path = None
+        scannet_mask_path = self.scannet_root + scannet_object_name + ".mask"
+        objects["mask"], _ = self._load(scannet_mask_path)
 
         objects["scan"], _ = self._load(scannet_object_path, scannet_mask_path)
 
@@ -126,14 +126,15 @@ class Scan2CAD(Dataset):
 
         objects = {k: np.ascontiguousarray(o) for k, o in objects.items()}
 
-        scan_data = {"name": scannet_object_name, "content": objects["scan"]}
-        if "mask" in objects:
-            scan_data["mask"] = objects["mask"]
-
-        cad_data = {"name": scannet_object_name, "content": objects["cad"]}
-
-        negative_data = {"name": negative_name, "content": objects["negative"]}
-        return scan_data, cad_data, negative_data
+        data = {'inputs': {}, 'predictions': {}, 'losses': {}, 'logs': {}}
+        data['inputs']['scan_name'] = scannet_object_name
+        data['inputs']['scan_content'] = objects['scan']
+        data['inputs']['scan_mask'] = objects['mask']
+        data['inputs']['cad_name'] = scannet_object_name
+        data['inputs']['cad_content'] = objects['cad']
+        data['inputs']['negative_name'] = scannet_object_name
+        data['inputs']['negative_content'] = objects['negative']
+        return data
 
     @staticmethod
     def _load_df(filepath):
