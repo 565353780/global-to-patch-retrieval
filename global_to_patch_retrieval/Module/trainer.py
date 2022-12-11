@@ -27,9 +27,9 @@ def worker_init_fn(worker_id):
 class Trainer(object):
 
     def __init__(self):
-        self.batch_size = 128
-        self.lr = 1e-3
-        self.weight_decay = 5e-4
+        self.batch_size = 24
+        self.lr = 1e-5
+        self.weight_decay = 1e-5
         self.decay_step = 21
         self.lr_decay = 0.76
         self.lowest_decay = 0.02
@@ -47,7 +47,7 @@ class Trainer(object):
             "/home/chli/chLi/Scan-CAD Object Similarity Dataset/objects_aligned/"
         shapenet_folder = \
             "/home/chli/chLi/Scan-CAD Object Similarity Dataset/objects_aligned/"
-            #  "/home/chli/chLi/Scan-CAD Object Similarity Dataset/shapenet_dim32_df/"
+        #  "/home/chli/chLi/Scan-CAD Object Similarity Dataset/shapenet_dim32_df/"
         self.train_dataset = Scan2CAD(dataset_file, scannet_folder,
                                       shapenet_folder, ["train"])
         self.eval_dataset = Scan2CAD(dataset_file, scannet_folder,
