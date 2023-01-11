@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import json
 import os
 import pickle
 
@@ -8,7 +9,8 @@ import numpy as np
 import open3d as o3d
 from tqdm import tqdm
 
-from global_to_patch_retrieval.Method.feature import generateAllCADFeature
+from global_to_patch_retrieval.Method.feature import (generateAllCADFeature,
+                                                      getPointsFeature)
 from global_to_patch_retrieval.Method.path import createFileFolder, renameFile
 
 
@@ -138,15 +140,57 @@ class RetrievalManager(object):
                                         print_progress)
         return True
 
+    def getObjectFeature(self, obb_info_folder_path, object_label):
+        assert os.path.exists(obb_info_folder_path)
+        object_file_path = obb_info_folder_path + "object/" + object_label + ".pcd"
+        obb_trans_matrix_file_path = obb_info_folder_path + "obb_trans_matrix/" + object_label + ".json"
+        assert os.path.exists(object_file_path)
+        assert os.path.exists(obb_trans_matrix_file_path)
+
+        pcd = o3d.io.read_point_cloud(object_file_path)
+
+        with open(obb_trans_matrix_file_path, 'r') as f:
+            obb_trans_matrix_dict = json.load(f)
+        noc_trans_matrix = np.array(obb_trans_matrix_dict['noc_trans_matrix'])
+
+        pcd.transform(noc_trans_matrix)
+        points = np.array(pcd.points)
+
+        object_feature, object_mask = getPointsFeature(points)
+        return object_feature, object_mask
+
+    def getAllObjectFeature(self, obb_info_folder_path, print_progress=False):
+        object_feature_list = []
+        object_mask_list = []
+
+        object_pcd_filename_list = os.listdir(object_folder_path)
+        for_data = object_pcd_filename_list
+        if print_progress:
+            print("[INFO][RetrievalManager::getAllObjectFeature]")
+            print("\t start get object features...")
+            for_data = tqdm(for_data)
+        for object_pcd_filename in for_data:
+            if object_pcd_filename[-4:] != ".pcd":
+                continue
+            object_label = object_pcd_filename.split(".pcd")[0]
+
+            object_feature, object_mask = self.getObjectFeature(
+                obb_info_folder_path, object_label)
+
+            object_feature_list.append(object_feature)
+            object_mask_list.append(object_mask)
+
+        object_feature_array = np.array(object_feature_list)
+        object_mask_array = np.array(object_mask_list)
+        return object_feature_array, object_mask_array
+
     def generateRetrievalResult(self,
                                 obb_info_folder_path,
                                 shapenet_feature_folder_path,
                                 print_progress=False):
-        assert os.path.exists(obb_info_folder_path)
         assert os.path.exists(shapenet_feature_folder_path)
 
         uniform_feature_file_path = shapenet_feature_folder_path + "uniform_feature.pkl"
-
         if not os.path.exists(uniform_feature_file_path):
             self.generateUniformFeatureDict(shapenet_feature_folder_path,
                                             print_progress)
@@ -154,4 +198,17 @@ class RetrievalManager(object):
         assert os.path.exists(uniform_feature_file_path)
         with open(uniform_feature_file_path, 'rb') as f:
             uniform_feature_dict = pickle.load(f)
+
+        cad_file_path_list = uniform_feature_dict[
+            'shapenet_model_file_path_list']
+        cad_feature_array = uniform_feature_dict['feature_array']
+        cad_mask_array = uniform_feature_dict['mask_array']
+
+        object_feature_array, object_mask_array = self.getAllObjectFeature(
+            obb_info_folder_path, print_progress)
+
+        print(cad_feature_array.shape)
+        print(cad_mask_array.shape)
+        print(object_feature_array.shape)
+        print(object_mask_array.shape)
         return True
