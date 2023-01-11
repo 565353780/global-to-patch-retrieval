@@ -353,6 +353,12 @@ class RetrievalManager(object):
             points = transPoints(points, obb_trans_matrix)
             cad_mesh.vertices = o3d.utility.Vector3dVector(points)
 
+            cad_mesh.compute_triangle_normals()
+
+            o3d.io.write_triangle_mesh(save_cad_model_file_path,
+                                       cad_mesh,
+                                       write_ascii=True)
+
             retrieval_cad_model_file_path_list.append(save_cad_model_file_path)
 
         if render:
