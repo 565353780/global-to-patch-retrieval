@@ -8,6 +8,7 @@ import pickle
 import numpy as np
 import open3d as o3d
 from tqdm import tqdm
+from shutil import copy
 
 from noc_transform.Method.transform import transPoints
 from points_shape_detect.Method.matrix import getRotateMatrix
@@ -276,6 +277,7 @@ class RetrievalManager(object):
     def generateRetrievalResult(self,
                                 obb_info_folder_path,
                                 shapenet_feature_folder_path,
+                                render=False,
                                 print_progress=False):
         assert os.path.exists(shapenet_feature_folder_path)
 
@@ -298,20 +300,34 @@ class RetrievalManager(object):
         object_feature_array, object_mask_array = self.getAllObjectFeature(
             obb_info_folder_path, print_progress)
 
+        save_cad_model_folder_path = "/home/chli/chLi/auto-scan2cad/1314/CAD/"
+        os.makedirs(save_cad_model_folder_path, exist_ok=True)
+
         retrieval_cad_model_file_path_list = []
 
         #  renderRetrievalResult(obb_info_folder_path,
         #  retrieval_cad_model_file_path_list)
 
         for i in range(object_feature_array.shape[0]):
+            save_cad_model_file_path = save_cad_model_folder_path + str(
+                i) + ".ply"
+
+            if os.path.exists(save_cad_model_file_path):
+                retrieval_cad_model_file_path_list.append(
+                    save_cad_model_file_path)
+                continue
+
             object_feature = object_feature_array[i]
             object_mask = object_mask_array[i]
 
             cad_model_file_path = self.getObjectRetrievalResult(
                 object_feature, object_mask, cad_feature_array, cad_mask_array,
                 cad_file_path_list, print_progress)
-            retrieval_cad_model_file_path_list.append(cad_model_file_path)
 
+            copy(cad_model_file_path, save_cad_model_file_path)
+            retrieval_cad_model_file_path_list.append(save_cad_model_file_path)
+
+        if render:
             renderRetrievalResult(obb_info_folder_path,
                                   retrieval_cad_model_file_path_list)
         return True
