@@ -14,6 +14,18 @@ from tqdm import tqdm
 from global_to_patch_retrieval.Method.path import createFileFolder, renameFile
 
 
+def getPointsFeature(point_array):
+    crop_space = CropSpace(0.1, 0.1, [-0.5, -0.5, -0.5], [0.5, 0.5, 0.5])
+
+    points = normalizePointArray(point_array)
+    points = points.reshape(1, -1, 3)
+    crop_space.updatePointArray(points)
+
+    feature = crop_space.getFeatureArray('valid')
+    mask = crop_space.getFeatureMaskArray('valid')
+    return feature, mask
+
+
 def generateCADFeature(model_file_path, shapenet_feature_folder_path):
     assert os.path.exists(model_file_path)
     model_label = model_file_path.split("ShapeNetCore.v2/")[1].split(
@@ -26,18 +38,11 @@ def generateCADFeature(model_file_path, shapenet_feature_folder_path):
     tmp_feature_file_path = feature_file_path[:-4] + "_tmp.pkl"
     createFileFolder(tmp_feature_file_path)
 
-    crop_space = CropSpace(0.1, 0.1, [-0.5, -0.5, -0.5], [0.5, 0.5, 0.5])
-
     mesh = o3d.io.read_triangle_mesh(model_file_path)
     pcd = mesh.sample_points_uniformly(100000)
     points = np.array(pcd.points, dtype=np.float32)
 
-    points = normalizePointArray(points)
-    points = points.reshape(1, -1, 3)
-
-    crop_space.updatePointArray(points)
-    feature = crop_space.getFeatureArray('valid')
-    mask = crop_space.getFeatureMaskArray('valid')
+    feature, mask = getPointsFeature(points)
 
     feature_dict = {'feature': feature, 'mask': mask}
     with open(tmp_feature_file_path, 'wb') as f:
