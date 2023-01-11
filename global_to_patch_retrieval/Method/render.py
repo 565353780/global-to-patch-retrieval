@@ -64,6 +64,8 @@ def renderRetrievalResult(obb_info_folder_path,
         object_pcd.translate(delta_translate)
         cad_mesh.translate(delta_translate)
 
+        cad_mesh.compute_triangle_normals()
+
         render_list.append(object_pcd)
         render_list.append(cad_mesh)
 
@@ -123,6 +125,8 @@ def renderRetrievalResult(obb_info_folder_path,
         points = points @ rotate_matrix
         object_pcd.points = o3d.utility.Vector3dVector(points)
 
+        test_mesh.compute_triangle_normals()
+
         o3d.visualization.draw_geometries([object_pcd, test_mesh])
         exit()
 
@@ -139,6 +143,8 @@ def renderRetrievalResult(obb_info_folder_path,
         points = points @ rotate_matrix
         points = transPoints(points, obb_trans_matrix)
         test_mesh.vertices = o3d.utility.Vector3dVector(points)
+
+        test_mesh.compute_triangle_normals()
 
         o3d.visualization.draw_geometries([object_pcd, test_mesh])
         exit()
@@ -157,6 +163,8 @@ def renderRetrievalResult(obb_info_folder_path,
         points = points @ rotate_matrix
         points = transPoints(points, obb_trans_matrix)
         cad_mesh.vertices = o3d.utility.Vector3dVector(points)
+
+        cad_mesh.compute_triangle_normals()
 
         render_list.append(object_pcd)
         render_list.append(cad_mesh)
