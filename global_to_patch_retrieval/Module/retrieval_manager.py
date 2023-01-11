@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import os
-
-from conv_onet.Data.crop_space import CropSpace
-from points_shape_detect.Method.trans import normalizePointArray
+import pickle
+import numpy as np
+import open3d as o3d
 from tqdm import tqdm
 
-from global_to_patch_retrieval.Method.path import createFileFolder
+from global_to_patch_retrieval.Method.path import createFileFolder, renameFile
+from global_to_patch_retrieval.Method.feature import generateAllCADFeature
 
 
 class RetrievalManager(object):
@@ -81,10 +82,69 @@ class RetrievalManager(object):
             renameFile(tmp_path_file, path_file)
         return True
 
-    def generateAllCADFeature(self, shapenet_feature_folder_path):
-        print(self.shapenet_model_file_path_list)
+    def generateFeatureDict(self,
+                            shapenet_feature_folder_path,
+                            print_progress=False):
+        assert os.path.exists(shapenet_feature_folder_path)
+
+        feature_list = []
+        mask_list = []
+
+        for_data = self.shapenet_model_file_path_list
+        if print_progress:
+            print("[INFO][RetrievalManager::generateRetrievalResult]")
+            print("\t start load shapenet model CAD features...")
+            for_data = tqdm(for_data)
+        for shapenet_model_file_path in for_data:
+            model_label = shapenet_model_file_path.split("ShapeNetCore.v2/")[
+                1].split("/models/model_normalized.obj")[0].replace("/", "_")
+            feature_file_path = shapenet_feature_folder_path + model_label + ".pkl"
+
+            assert os.path.exists(feature_file_path)
+
+            with open(feature_file_path, 'rb') as f:
+                feature_dict = pickle.load(f)
+
+            feature_list.append(feature_dict['feature'])
+            mask_list.append(feature_dict['mask'])
         return True
 
-    def generateRetrievalResult(self, obb_info_folder_path):
+    def generateAllCADFeature(self,
+                              shapenet_feature_folder_path,
+                              print_progress=False):
+        generateAllCADFeature(self.shapenet_model_file_path_list,
+                              shapenet_feature_folder_path, print_progress)
+        exit()
+
+        self.generateFeatureDict(shapenet_feature_folder_path, print_progress)
+        exit()
+        return True
+
+    def generateRetrievalResult(self,
+                                obb_info_folder_path,
+                                shapenet_feature_folder_path,
+                                print_progress=False):
         assert os.path.exists(obb_info_folder_path)
+        assert os.path.exists(shapenet_feature_folder_path)
+
+        feature_list = []
+        mask_list = []
+
+        for_data = self.shapenet_model_file_path_list
+        if print_progress:
+            print("[INFO][RetrievalManager::generateRetrievalResult]")
+            print("\t start load shapenet model CAD features...")
+            for_data = tqdm(for_data)
+        for shapenet_model_file_path in for_data:
+            model_label = shapenet_model_file_path.split("ShapeNetCore.v2/")[
+                1].split("/models/model_normalized.obj")[0].replace("/", "_")
+            feature_file_path = shapenet_feature_folder_path + model_label + ".pkl"
+
+            assert os.path.exists(feature_file_path)
+
+            with open(feature_file_path, 'rb') as f:
+                feature_dict = pickle.load(f)
+
+            feature_list.append(feature_dict['feature'])
+            mask_list.append(feature_dict['mask'])
         return True

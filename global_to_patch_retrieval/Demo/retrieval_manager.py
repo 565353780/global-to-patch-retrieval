@@ -18,7 +18,10 @@ def demo():
     retrieval_manager = RetrievalManager(shapenet_dataset_folder_path,
                                          print_progress)
 
-    retrieval_manager.generateAllCADFeature(shapenet_feature_folder_path)
+    retrieval_manager.generateAllCADFeature(shapenet_feature_folder_path,
+                                            print_progress)
 
-    retrieval_manager.generateRetrievalResult(obb_info_folder_path)
+    retrieval_manager.generateRetrievalResult(obb_info_folder_path,
+                                              shapenet_feature_folder_path,
+                                              print_progress)
     return True
