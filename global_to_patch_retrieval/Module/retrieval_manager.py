@@ -87,6 +87,7 @@ class RetrievalManager(object):
 
     def generateUniformFeatureDict(self,
                                    shapenet_feature_folder_path,
+                                   save_uniform_feature_file_path,
                                    print_progress=False):
         assert os.path.exists(shapenet_feature_folder_path)
 
@@ -95,13 +96,16 @@ class RetrievalManager(object):
 
         for_data = self.shapenet_model_file_path_list
         if print_progress:
-            print("[INFO][RetrievalManager::generateRetrievalResult]")
+            print("[INFO][RetrievalManager::generateUniformFeatureDict]")
             print("\t start load shapenet model CAD features...")
             for_data = tqdm(for_data)
         for shapenet_model_file_path in for_data:
             model_label = shapenet_model_file_path.split("ShapeNetCore.v2/")[
                 1].split("/models/model_normalized.obj")[0].replace("/", "_")
             feature_file_path = shapenet_feature_folder_path + model_label + ".pkl"
+
+            if not os.path.exists(feature_file_path):
+                break
 
             assert os.path.exists(feature_file_path)
 
@@ -111,10 +115,9 @@ class RetrievalManager(object):
             feature_list.append(feature_dict['feature'])
             mask_list.append(feature_dict['mask'])
 
-        uniform_feature_file_path = shapenet_feature_folder_path + "uniform_feature.pkl"
-
-        tmp_uniform_feature_file_path = uniform_feature_file_path[:-4] + "_tmp.pkl"
-        createFileFolder(tmp_uniform_feature_file_path)
+        tmp_save_uniform_feature_file_path = save_uniform_feature_file_path[:
+                                                                            -4] + "_tmp.pkl"
+        createFileFolder(tmp_save_uniform_feature_file_path)
 
         feature_array = np.array(feature_list)
         mask_array = np.array(mask_list)
@@ -126,8 +129,11 @@ class RetrievalManager(object):
             'mask_array': mask_array
         }
 
-        with open(tmp_uniform_feature_file_path, 'wb') as f:
+        with open(tmp_save_uniform_feature_file_path, 'wb') as f:
             pickle.dump(uniform_feature_dict, f)
+
+        renameFile(tmp_save_uniform_feature_file_path,
+                   save_uniform_feature_file_path)
         return True
 
     def generateAllCADFeature(self,
@@ -163,6 +169,8 @@ class RetrievalManager(object):
         object_feature_list = []
         object_mask_list = []
 
+        object_folder_path = obb_info_folder_path + "object/"
+
         object_pcd_filename_list = os.listdir(object_folder_path)
         for_data = object_pcd_filename_list
         if print_progress:
@@ -190,9 +198,11 @@ class RetrievalManager(object):
                                 print_progress=False):
         assert os.path.exists(shapenet_feature_folder_path)
 
-        uniform_feature_file_path = shapenet_feature_folder_path + "uniform_feature.pkl"
+        uniform_feature_file_path = shapenet_feature_folder_path + \
+            "../uniform_feature/uniform_feature.pkl"
         if not os.path.exists(uniform_feature_file_path):
             self.generateUniformFeatureDict(shapenet_feature_folder_path,
+                                            uniform_feature_file_path,
                                             print_progress)
 
         assert os.path.exists(uniform_feature_file_path)
@@ -207,8 +217,4 @@ class RetrievalManager(object):
         object_feature_array, object_mask_array = self.getAllObjectFeature(
             obb_info_folder_path, print_progress)
 
-        print(cad_feature_array.shape)
-        print(cad_mask_array.shape)
-        print(object_feature_array.shape)
-        print(object_mask_array.shape)
         return True
