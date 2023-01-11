@@ -34,7 +34,15 @@ class RetrievalManager(object):
 
         if os.path.exists(path_file):
             with open(path_file, 'r') as f:
-                self.shapenet_model_file_path_list = f.readlines()
+                lines = f.readlines()
+                for_data = lines
+                if print_progress:
+                    print("[INFO][RetrievalManager::loadShapeNetDataset]")
+                    print("\t start quick load shapenet model file paths...")
+                    for_data = tqdm(for_data)
+                for line in for_data:
+                    self.shapenet_model_file_path_list.append(
+                        line.split("\n")[0])
         else:
             tmp_path_file = path_file[:-4] + "_tmp.txt"
             createFileFolder(tmp_path_file)
@@ -71,11 +79,10 @@ class RetrievalManager(object):
                     f.write(shapenet_model_file_path + "\n")
 
             renameFile(tmp_path_file, path_file)
-
-        print("model total :", len(self.shapenet_model_file_path_list))
         return True
 
     def generateAllCADFeature(self, shapenet_feature_folder_path):
+        print(self.shapenet_model_file_path_list)
         return True
 
     def generateRetrievalResult(self, obb_info_folder_path):
