@@ -14,10 +14,13 @@ from tqdm import tqdm
 from global_to_patch_retrieval.Method.path import createFileFolder, renameFile
 
 
-def getPointsFeature(point_array):
+def getPointsFeature(point_array, normalize=True):
     crop_space = CropSpace(0.1, 0.1, [-0.5, -0.5, -0.5], [0.5, 0.5, 0.5])
 
-    points = normalizePointArray(point_array)
+    if normalize:
+        points = normalizePointArray(point_array)
+    else:
+        points = point_array
     points = points.reshape(1, -1, 3)
     crop_space.updatePointArray(points)
 

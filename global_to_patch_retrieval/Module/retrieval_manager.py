@@ -10,6 +10,7 @@ import open3d as o3d
 from tqdm import tqdm
 
 from noc_transform.Method.transform import transPoints
+from points_shape_detect.Method.matrix import getRotateMatrix
 
 from global_to_patch_retrieval.Method.feature import (generateAllCADFeature,
                                                       getPointsFeature)
@@ -164,9 +165,13 @@ class RetrievalManager(object):
 
         points = np.array(pcd.points)
         points = transPoints(points, noc_trans_matrix)
+        rotate_matrix = getRotateMatrix([90, 0, -90], True)
+        points = points @ rotate_matrix
         pcd.points = o3d.utility.Vector3dVector(points)
 
-        object_feature, object_mask = getPointsFeature(points)
+        points = np.array(pcd.points)
+
+        object_feature, object_mask = getPointsFeature(points, False)
         return object_feature, object_mask
 
     def getAllObjectFeature(self, obb_info_folder_path, print_progress=False):
@@ -294,6 +299,9 @@ class RetrievalManager(object):
             obb_info_folder_path, print_progress)
 
         retrieval_cad_model_file_path_list = []
+
+        #  renderRetrievalResult(obb_info_folder_path,
+        #  retrieval_cad_model_file_path_list)
 
         for i in range(object_feature_array.shape[0]):
             object_feature = object_feature_array[i]
