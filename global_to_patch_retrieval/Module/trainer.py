@@ -17,7 +17,6 @@ from global_to_patch_retrieval.Method.path import (createFileFolder,
                                                    removeFile, renameFile)
 from global_to_patch_retrieval.Method.time import getCurrentTime
 from global_to_patch_retrieval.Model.retrieval_net import RetrievalNet
-#  from global_to_patch_retrieval.Method.render import renderRefineBBox
 
 
 def worker_init_fn(worker_id):
