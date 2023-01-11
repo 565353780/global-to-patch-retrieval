@@ -8,9 +8,9 @@ import pickle
 import numpy as np
 import open3d as o3d
 from tqdm import tqdm
-from shutil import copy
 
 from noc_transform.Method.transform import transPoints
+from points_shape_detect.Method.trans import normalizePointArray
 from points_shape_detect.Method.matrix import getRotateMatrix
 
 from global_to_patch_retrieval.Method.feature import (generateAllCADFeature,
@@ -308,6 +308,26 @@ class RetrievalManager(object):
         #  renderRetrievalResult(obb_info_folder_path,
         #  retrieval_cad_model_file_path_list)
 
+        obb_trans_matrix_list = []
+
+        object_folder_path = obb_info_folder_path + "object/"
+        object_pcd_filename_list = os.listdir(object_folder_path)
+
+        for object_pcd_filename in object_pcd_filename_list:
+            if object_pcd_filename[-4:] != ".pcd":
+                continue
+            object_label = object_pcd_filename.split(".pcd")[0]
+
+            obb_trans_matrix_file_path = obb_info_folder_path + "obb_trans_matrix/" + object_label + ".json"
+            assert os.path.exists(obb_trans_matrix_file_path)
+
+            with open(obb_trans_matrix_file_path, 'r') as f:
+                obb_trans_matrix_dict = json.load(f)
+            noc_trans_matrix = np.array(
+                obb_trans_matrix_dict['noc_trans_matrix'])
+            trans_matrix = np.linalg.inv(noc_trans_matrix)
+            obb_trans_matrix_list.append(trans_matrix)
+
         for i in range(object_feature_array.shape[0]):
             save_cad_model_file_path = save_cad_model_folder_path + str(
                 i) + ".ply"
@@ -317,6 +337,7 @@ class RetrievalManager(object):
                     save_cad_model_file_path)
                 continue
 
+            obb_trans_matrix = obb_trans_matrix_list[i]
             object_feature = object_feature_array[i]
             object_mask = object_mask_array[i]
 
@@ -324,7 +345,14 @@ class RetrievalManager(object):
                 object_feature, object_mask, cad_feature_array, cad_mask_array,
                 cad_file_path_list, print_progress)
 
-            copy(cad_model_file_path, save_cad_model_file_path)
+            cad_mesh = o3d.io.read_triangle_mesh(cad_model_file_path)
+            points = np.array(cad_mesh.vertices)
+            points = normalizePointArray(points)
+            rotate_matrix = getRotateMatrix([-90, 0, 90], False)
+            points = points @ rotate_matrix
+            points = transPoints(points, obb_trans_matrix)
+            cad_mesh.vertices = o3d.utility.Vector3dVector(points)
+
             retrieval_cad_model_file_path_list.append(save_cad_model_file_path)
 
         if render:
