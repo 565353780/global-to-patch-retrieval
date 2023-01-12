@@ -306,7 +306,7 @@ class RetrievalManager(object):
         retrieval_cad_model_file_path_list = []
 
         #  renderRetrievalResult(obb_info_folder_path,
-        #  retrieval_cad_model_file_path_list)
+        #  retrieval_cad_model_file_path_list, False)
 
         obb_trans_matrix_list = []
 
@@ -363,5 +363,5 @@ class RetrievalManager(object):
 
         if render:
             renderRetrievalResult(obb_info_folder_path,
-                                  retrieval_cad_model_file_path_list)
+                                  retrieval_cad_model_file_path_list, False)
         return True

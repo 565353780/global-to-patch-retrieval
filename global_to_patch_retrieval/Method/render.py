@@ -79,7 +79,8 @@ def renderRetrievalResult(obb_info_folder_path,
 
 
 def renderRetrievalResult(obb_info_folder_path,
-                          retrieval_cad_model_file_path_list):
+                          retrieval_cad_model_file_path_list,
+                          need_transform=True):
     assert os.path.exists(obb_info_folder_path)
 
     object_folder_path = obb_info_folder_path + "object/"
@@ -157,12 +158,13 @@ def renderRetrievalResult(obb_info_folder_path,
         cad_model_file_path = retrieval_cad_model_file_path_list[i]
         cad_mesh = o3d.io.read_triangle_mesh(cad_model_file_path)
 
-        points = np.array(cad_mesh.vertices)
-        points = normalizePointArray(points)
-        rotate_matrix = getRotateMatrix([-90, 0, 90], False)
-        points = points @ rotate_matrix
-        points = transPoints(points, obb_trans_matrix)
-        cad_mesh.vertices = o3d.utility.Vector3dVector(points)
+        if need_transform:
+            points = np.array(cad_mesh.vertices)
+            points = normalizePointArray(points)
+            rotate_matrix = getRotateMatrix([-90, 0, 90], False)
+            points = points @ rotate_matrix
+            points = transPoints(points, obb_trans_matrix)
+            cad_mesh.vertices = o3d.utility.Vector3dVector(points)
 
         cad_mesh.compute_triangle_normals()
 

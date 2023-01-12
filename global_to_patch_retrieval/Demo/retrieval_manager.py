@@ -14,7 +14,7 @@ def demo():
     shapenet_dataset_folder_path = "/home/chli/chLi/ShapeNet/Core/ShapeNetCore.v2/"
     shapenet_feature_folder_path = "/home/chli/chLi/ShapeNet/features/"
     obb_info_folder_path = "/home/chli/chLi/auto-scan2cad/1314/obb_info/"
-    render = False
+    render = True
     print_progress = True
 
     retrieval_manager = RetrievalManager(shapenet_dataset_folder_path,
