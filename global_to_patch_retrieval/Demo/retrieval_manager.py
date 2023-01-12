@@ -6,6 +6,7 @@ import sys
 sys.path.append("../conv-onet")
 sys.path.append("../points-shape-detect")
 sys.path.append("../noc-transform")
+sys.path.append("../scene-layout-detect")
 
 from global_to_patch_retrieval.Module.retrieval_manager import RetrievalManager
 

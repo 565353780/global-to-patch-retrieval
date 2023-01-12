@@ -80,6 +80,7 @@ def renderRetrievalResult(obb_info_folder_path,
 
 def renderRetrievalResult(obb_info_folder_path,
                           retrieval_cad_model_file_path_list,
+                          layout_mesh_file_path_list,
                           need_transform=True):
     assert os.path.exists(obb_info_folder_path)
 
@@ -170,6 +171,11 @@ def renderRetrievalResult(obb_info_folder_path,
 
         render_list.append(object_pcd)
         render_list.append(cad_mesh)
+
+    for layout_mesh_file_path in layout_mesh_file_path_list:
+        layout_mesh = o3d.io.read_triangle_mesh(layout_mesh_file_path)
+        layout_mesh.compute_triangle_normals()
+        render_list.append(layout_mesh)
 
     o3d.visualization.draw_geometries(render_list)
     return True

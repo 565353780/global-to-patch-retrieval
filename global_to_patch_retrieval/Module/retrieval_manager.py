@@ -7,11 +7,12 @@ import pickle
 
 import numpy as np
 import open3d as o3d
-from tqdm import tqdm
-
+from noc_transform.Data.obb import OBB
 from noc_transform.Method.transform import transPoints
-from points_shape_detect.Method.trans import normalizePointArray
 from points_shape_detect.Method.matrix import getRotateMatrix
+from points_shape_detect.Method.trans import normalizePointArray
+from scene_layout_detect.Method.mesh import generateLayoutMesh
+from tqdm import tqdm
 
 from global_to_patch_retrieval.Method.feature import (generateAllCADFeature,
                                                       getPointsFeature)
@@ -274,6 +275,49 @@ class RetrievalManager(object):
         min_error_cad_model_file_path = cad_model_file_path_list[min_error_idx]
         return min_error_cad_model_file_path
 
+    def getLayoutMesh(self, obb_info_folder_path, layout_label):
+        layout_folder_path = obb_info_folder_path + "layout_obb_trans_matrix/"
+
+        layout_obb_trans_matrix_file_path = obb_info_folder_path + "layout_obb_trans_matrix/" + layout_label + ".json"
+        assert os.path.exists(layout_obb_trans_matrix_file_path)
+
+        with open(layout_obb_trans_matrix_file_path, 'r') as f:
+            layout_obb_trans_matrix_dict = json.load(f)
+        layout_noc_trans_matrix = np.array(
+            layout_obb_trans_matrix_dict['noc_trans_matrix'])
+
+        layout_trans_matrix = np.linalg.inv(layout_noc_trans_matrix)
+
+        obb = OBB.fromABBList([-0.5, -0.5, -0.5, 0.5, 0.5, 0.5])
+        points = obb.points
+        points = transPoints(points, layout_trans_matrix)
+        obb.points = points
+
+        layout_mesh = generateLayoutMesh(points[[4, 6, 2, 0]],
+                                         top_floor_array=points[[5, 7, 3, 1]])
+        return layout_mesh
+
+    def getAllLayoutMeshes(self, obb_info_folder_path):
+        assert os.path.exists(obb_info_folder_path)
+        layout_folder_path = obb_info_folder_path + "layout_obb_trans_matrix/"
+        assert os.path.exists(layout_folder_path)
+
+        layout_label_filename_list = os.listdir(layout_folder_path)
+
+        layout_mesh_list = []
+
+        for layout_label_filename in layout_label_filename_list:
+            if layout_label_filename[-5:] != ".json":
+                continue
+
+            layout_label = layout_label_filename.split(".json")[0]
+
+            layout_mesh = self.getLayoutMesh(obb_info_folder_path,
+                                             layout_label)
+            layout_mesh_list.append(layout_mesh)
+
+        return layout_mesh_list
+
     def generateRetrievalResult(self,
                                 obb_info_folder_path,
                                 shapenet_feature_folder_path,
@@ -304,6 +348,7 @@ class RetrievalManager(object):
         os.makedirs(save_cad_model_folder_path, exist_ok=True)
 
         retrieval_cad_model_file_path_list = []
+        layout_mesh_file_path_list = []
 
         #  renderRetrievalResult(obb_info_folder_path,
         #  retrieval_cad_model_file_path_list, False)
@@ -361,7 +406,24 @@ class RetrievalManager(object):
 
             retrieval_cad_model_file_path_list.append(save_cad_model_file_path)
 
+        layout_mesh_list = self.getAllLayoutMeshes(obb_info_folder_path)
+        for i, layout_mesh in enumerate(layout_mesh_list):
+            save_layout_mesh_file_path = save_cad_model_folder_path + "layout_" + str(
+                i) + ".ply"
+            if os.path.exists(save_layout_mesh_file_path):
+                layout_mesh_file_path_list.append(save_layout_mesh_file_path)
+                continue
+
+            layout_mesh.compute_triangle_normals()
+
+            o3d.io.write_triangle_mesh(save_layout_mesh_file_path,
+                                       layout_mesh,
+                                       write_ascii=True)
+
+            layout_mesh_file_path_list.append(save_layout_mesh_file_path)
+
         if render:
             renderRetrievalResult(obb_info_folder_path,
-                                  retrieval_cad_model_file_path_list, False)
+                                  retrieval_cad_model_file_path_list,
+                                  layout_mesh_file_path_list, False)
         return True
