@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import os
+from multiprocessing import Pool
+
 import numpy as np
 from tqdm import tqdm
-from multiprocessing import Pool
 
 
 def getObjectCADError(object_source_feature, object_mask, cad_source_feature,
@@ -56,27 +57,76 @@ def getObjectCADError(object_source_feature, object_mask, cad_source_feature,
     error = merge_error + 0.8 * object_error + 0.2 * cad_error
     return error
 
-#  def getObjectCADErrorWithPool()
+
+def getObjectCADErrorWithInputs(inputs):
+    object_source_feature, object_mask, cad_source_feature, cad_mask = inputs
+    return getObjectCADError(object_source_feature, object_mask,
+                             cad_source_feature, cad_mask)
+
+
+def getObjectCADErrorListWithPool(object_source_feature,
+                                  object_mask,
+                                  cad_feature_array,
+                                  cad_mask_array,
+                                  print_progress=False):
+    inputs_list = []
+    for i in range(cad_feature_array.shape[0]):
+        inputs = [
+            object_source_feature, object_mask, cad_feature_array[i],
+            cad_mask_array[i]
+        ]
+        inputs_list.append(inputs)
+
+    if print_progress:
+        print("[INFO][retrieval::getObjectCADErrorListWithPool]")
+        print("\t start get object CAD error list with pool...")
+        with Pool(os.cpu_count()) as pool:
+            error_list = list(
+                tqdm(pool.imap(getObjectCADErrorWithInputs, inputs_list),
+                     total=len(inputs_list)))
+        return error_list
+
+    with Pool(os.cpu_count()) as pool:
+        error_list = list(pool.imap(getObjectCADErrorWithInputs, inputs_list))
+    return error_list
+
+
+def getObjectCADErrorList(object_source_feature,
+                          object_mask,
+                          cad_feature_array,
+                          cad_mask_array,
+                          print_progress=False,
+                          with_pool=True):
+    if with_pool:
+        return getObjectCADErrorListWithPool(object_source_feature,
+                                             object_mask, cad_feature_array,
+                                             cad_mask_array, print_progress)
+
+    error_list = []
+    for_data = range(cad_feature_array.shape[0])
+    if print_progress:
+        print("[INFO][retrieval::getObjectCADErrorList]")
+        print("\t start get object CAD error list...")
+        for_data = tqdm(for_data)
+    for i in for_data:
+        cad_source_feature = cad_feature_array[i]
+        cad_mask = cad_mask_array[i]
+        error = getObjectCADError(object_source_feature, object_mask,
+                                  cad_source_feature, cad_mask)
+        error_list.append(error)
+    return error_list
+
 
 def getObjectRetrievalResult(object_source_feature,
                              object_mask,
                              cad_feature_array,
                              cad_mask_array,
                              cad_model_file_path_list,
-                             print_progress=False):
-    error_list = []
-    for_data = range(cad_feature_array.shape[0])
-    if print_progress:
-        print("[INFO][retrieval::getObjectRetrievalResult]")
-        print("\t start get object retrieval result...")
-        for_data = tqdm(for_data)
-    for i in for_data:
-        cad_source_feature = cad_feature_array[i]
-        cad_mask = cad_mask_array[i]
-
-        error = getObjectCADError(object_source_feature, object_mask,
-                                  cad_source_feature, cad_mask)
-        error_list.append(error)
+                             print_progress=False,
+                             with_pool=True):
+    error_list = getObjectCADErrorList(object_source_feature, object_mask,
+                                       cad_feature_array, cad_mask_array,
+                                       print_progress, with_pool)
 
     min_error_idx = np.argmin(error_list)
     min_error_cad_model_file_path = cad_model_file_path_list[min_error_idx]
