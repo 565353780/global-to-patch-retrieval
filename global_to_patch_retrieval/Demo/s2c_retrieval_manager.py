@@ -9,7 +9,8 @@ sys.path.append("../conv-onet")
 sys.path.append("../noc-transform")
 sys.path.append("../points-shape-detect")
 
-from global_to_patch_retrieval.Module.s2c_retrieval_manager import S2CRetrievalManager
+from global_to_patch_retrieval.Module.s2c_retrieval_manager import \
+    S2CRetrievalManager
 
 
 def demo():
@@ -29,11 +30,11 @@ def demo():
 
     valid_scene_name_list = [
         'scene0474_02', 'scene0000_01', 'scene0667_01', 'scene0500_00',
-        'scene0247_01', 'scene0644_00'
+        'scene0247_01', 'scene0644_00', 'scene0231_01', 'scene0653_00',
+        'scene0300_00', 'scene0569_00'
     ]
 
-    scannet_scene_name = valid_scene_name_list[3]
-
-    s2c_retrieval_manager.generateSceneRetrievalResult(scannet_scene_name,
-                                                       print_progress)
+    for scannet_scene_name in valid_scene_name_list[6:]:
+        s2c_retrieval_manager.generateSceneRetrievalResult(
+            scannet_scene_name, print_progress)
     return True
