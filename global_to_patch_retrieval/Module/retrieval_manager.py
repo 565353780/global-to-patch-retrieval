@@ -312,7 +312,7 @@ class RetrievalManager(object):
             object_feature = object_feature_array[i]
             object_mask = object_mask_array[i]
 
-            cad_model_file_path = self.getObjectRetrievalResult(
+            cad_model_file_path = getObjectRetrievalResult(
                 object_feature, object_mask, cad_feature_array, cad_mask_array,
                 cad_file_path_list, print_progress)
 

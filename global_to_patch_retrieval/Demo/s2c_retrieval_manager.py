@@ -7,6 +7,7 @@ sys.path.append("../mesh-manage/")
 sys.path.append("../scan2cad-dataset-manage")
 sys.path.append("../conv-onet")
 sys.path.append("../noc-transform")
+sys.path.append("../points-shape-detect")
 
 from global_to_patch_retrieval.Module.s2c_retrieval_manager import S2CRetrievalManager
 
@@ -31,7 +32,8 @@ def demo():
         'scene0247_01', 'scene0644_00'
     ]
 
-    scannet_scene_name = valid_scene_name_list[1]
+    scannet_scene_name = valid_scene_name_list[3]
 
-    s2c_retrieval_manager.generateSceneRetrievalResult(scannet_scene_name)
+    s2c_retrieval_manager.generateSceneRetrievalResult(scannet_scene_name,
+                                                       print_progress)
     return True
