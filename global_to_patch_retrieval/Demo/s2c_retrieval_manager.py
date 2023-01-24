@@ -31,10 +31,11 @@ def demo():
     valid_scene_name_list = [
         'scene0474_02', 'scene0000_01', 'scene0667_01', 'scene0500_00',
         'scene0247_01', 'scene0644_00', 'scene0231_01', 'scene0653_00',
-        'scene0300_00', 'scene0569_00'
+        'scene0300_00', 'scene0569_00', 'scene0588_01', 'scene0603_01',
+        'scene0054_00', 'scene0673_04'
     ]
 
-    for scannet_scene_name in valid_scene_name_list[6:]:
+    for scannet_scene_name in valid_scene_name_list[-4:]:
         s2c_retrieval_manager.generateSceneRetrievalResult(
             scannet_scene_name, print_progress)
     return True
