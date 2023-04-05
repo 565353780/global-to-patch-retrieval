@@ -4,12 +4,9 @@
 import torch
 from torch import nn
 
-from global_to_patch_retrieval.Model.global_retrieval.completion_net import \
-    CompletionNet
-from global_to_patch_retrieval.Model.global_retrieval.separation_net import \
-    SeparationNet
-from global_to_patch_retrieval.Model.global_retrieval.triplet_net import \
-    TripletNet
+from global_to_patch_retrieval.Model.global_retrieval.completion_net import CompletionNet
+from global_to_patch_retrieval.Model.global_retrieval.separation_net import SeparationNet
+from global_to_patch_retrieval.Model.global_retrieval.triplet_net import TripletNet
 from global_to_patch_retrieval.Method.weight import setWeight
 
 
