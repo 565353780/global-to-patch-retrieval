@@ -4,7 +4,6 @@
 import os
 import torch
 import numpy as np
-import open3d as o3d
 from tqdm import tqdm
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
@@ -251,6 +250,7 @@ class Trainer(object):
             for_data = self.eval_dataloader
             if print_progress:
                 for_data = tqdm(for_data)
+            #TODO: compute mean losses for one eval epoch
             for data in for_data:
                 self.evalStep(data)
                 self.eval_step += 1
