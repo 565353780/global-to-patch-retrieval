@@ -122,7 +122,7 @@ class RetrievalNet(nn.Module):
         data = setWeight(data, 'loss_foreground', 1)
         data = setWeight(data, 'loss_background', 1)
         data = setWeight(data, 'loss_completion', 1)
-        data = setWeight(data, 'loss_cluster', 10)
+        data = setWeight(data, 'loss_cluster', 1)
         return data
 
     def forward(self, data):
