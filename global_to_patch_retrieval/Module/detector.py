@@ -43,10 +43,23 @@ class Detector(object):
                            ["train"])
 
         for i in range(len(dataset)):
-            data = dataset.__getitem__(i)
-            for key, item in data['inputs'].items():
-                print(key, '->', item.shape)
+            load_data = dataset.__getitem__(i)
+            scan_content = load_data['inputs']['scan_content']
+
+            data = {'inputs': {}, 'predictions': {}, 'losses': {}, 'logs': {}}
+
+            scan_content_tensor = torch.from_numpy(
+                scan_content).cuda().unsqueeze(0)
+            data['inputs']['scan_content'] = scan_content_tensor
+
+            data = self.model(data)
+
+            embed_feature = data['predictions']['embed_feature'].detach().cpu(
+            ).numpy().reshape(-1)
+
+            print(embed_feature.shape)
             return
+
         return True
 
     def detectSceneTrans(self, data):

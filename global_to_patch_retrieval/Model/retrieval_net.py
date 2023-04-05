@@ -87,18 +87,27 @@ class RetrievalNet(nn.Module):
         return data
 
     def clusterFeature(self, data):
-        cad_model = data['inputs']['cad_content']
-        negative_model = data['inputs']['negative_content']
-        completed_shape = data['predictions']['completed_shape']
+        if self.infer:
+            if 'completed_shape' in data['predictions'].keys():
+                embed_shape = data['predictions']['completed_shape']
+            else:
+                embed_shape = data['inputs']['scan_content']
 
-        anchor, positive, negative = self.triplet_net(
-            torch.sigmoid(completed_shape), cad_model, negative_model)
+            embed_feature = self.triplet_net.embed(embed_shape)
 
-        data['predictions']['anchor'] = anchor
-        data['predictions']['positive'] = positive
-        data['predictions']['negative'] = negative
+            data['predictions']['embed_feature'] = embed_feature
+        else:
+            cad_model = data['inputs']['cad_content']
+            negative_model = data['inputs']['negative_content']
+            completed_shape = data['predictions']['completed_shape']
 
-        if not self.infer:
+            anchor, positive, negative = self.triplet_net(
+                torch.sigmoid(completed_shape), cad_model, negative_model)
+
+            data['predictions']['anchor'] = anchor
+            data['predictions']['positive'] = positive
+            data['predictions']['negative'] = negative
+
             data = self.lossCluster(data)
         return data
 
@@ -133,4 +142,8 @@ class RetrievalNet(nn.Module):
         data = self.clusterFeature(data)
 
         data = self.setWeight(data)
+        return data
+
+    def embedCAD(self, data):
+        data = self.clusterFeature(data)
         return data
