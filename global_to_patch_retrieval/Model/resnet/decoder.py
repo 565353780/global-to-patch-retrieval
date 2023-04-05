@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import torch
 import torch.nn as nn
 
 from global_to_patch_retrieval.Model.resnet.block import ResNetBlock

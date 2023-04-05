@@ -18,8 +18,8 @@ class RetrievalNet(nn.Module):
     def __init__(self, infer=False):
         super().__init__()
 
-        self.completion_net = CompletionNet()
         self.separation_net = SeparationNet()
+        self.completion_net = CompletionNet()
         self.triplet_net = TripletNet()
 
         self.loss_separation = nn.BCEWithLogitsLoss(reduction="none")
@@ -31,7 +31,6 @@ class RetrievalNet(nn.Module):
 
     def separateForeground(self, data):
         scan_model = data['inputs']['scan_content']
-        scan_name = data['inputs']['scan_name']
 
         foreground, background = self.separation_net(torch.sigmoid(scan_model))
 
@@ -123,7 +122,7 @@ class RetrievalNet(nn.Module):
         data = setWeight(data, 'loss_foreground', 1)
         data = setWeight(data, 'loss_background', 1)
         data = setWeight(data, 'loss_completion', 1)
-        data = setWeight(data, 'loss_cluster', 1)
+        data = setWeight(data, 'loss_cluster', 10)
         return data
 
     def forward(self, data):
