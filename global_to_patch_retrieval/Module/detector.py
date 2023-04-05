@@ -44,6 +44,12 @@ class Detector(object):
 
         for i in range(len(dataset)):
             load_data = dataset.__getitem__(i)
+            scan_name = load_data['inputs']['scan_name']
+            scannet_object_path = dataset.scannet_root + scan_name + '.sdf'
+            print(scan_name)
+            print(scannet_object_path)
+            assert os.path.exists(scannet_object_path)
+
             scan_content = load_data['inputs']['scan_content']
 
             data = {'inputs': {}, 'predictions': {}, 'losses': {}, 'logs': {}}
@@ -58,4 +64,5 @@ class Detector(object):
             ).numpy().reshape(-1)
 
             print(embed_feature.shape)
+            return
         return True
