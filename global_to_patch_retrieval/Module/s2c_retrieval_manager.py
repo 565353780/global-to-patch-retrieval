@@ -21,7 +21,6 @@ from global_to_patch_retrieval.Module.retrieval_manager import RetrievalManager
 
 
 class S2CRetrievalManager(RetrievalManager):
-
     def __init__(self,
                  scan2cad_dataset_folder_path,
                  scannet_dataset_folder_path,
@@ -41,6 +40,8 @@ class S2CRetrievalManager(RetrievalManager):
         self.uniform_feature_dict = None
 
         self.loadUniformFeature(shapenet_feature_folder_path)
+
+        self.retrieval_num = 6
         return
 
     def loadUniformFeature(self, shapenet_feature_folder_path):
@@ -61,6 +62,8 @@ class S2CRetrievalManager(RetrievalManager):
     def generateSceneRetrievalResultByNOC(self,
                                           scannet_scene_name,
                                           print_progress=False):
+        render = False
+
         cad_file_path_list = self.uniform_feature_dict[
             'shapenet_model_file_path_list']
         cad_feature_array = self.uniform_feature_dict['feature_array']
@@ -100,24 +103,29 @@ class S2CRetrievalManager(RetrievalManager):
             trans_points = transPoints(object_points, noc_trans_matrix)
             object_feature, object_mask = getPointsFeature(trans_points, False)
 
-            cad_model_file_path = getObjectRetrievalResult(
+            cad_model_file_path_list = getObjectRetrievalResult(
                 object_feature, object_mask, cad_feature_array, cad_mask_array,
-                cad_file_path_list, print_progress)
+                cad_file_path_list, self.retrieval_num, print_progress)
 
-            object_pcd.points = o3d.utility.Vector3dVector(trans_points)
-            retrieval_mesh = o3d.io.read_triangle_mesh(cad_model_file_path)
-            points = np.array(retrieval_mesh.vertices)
-            points = normalizePointArray(points)
-            retrieval_mesh.vertices = o3d.utility.Vector3dVector(points)
-            retrieval_mesh.translate([1, 0, 0])
+            if render:
+                for cad_model_file_path in cad_model_file_path_list:
+                    object_pcd.points = o3d.utility.Vector3dVector(
+                        trans_points)
+                    retrieval_mesh = o3d.io.read_triangle_mesh(
+                        cad_model_file_path)
+                    points = np.array(retrieval_mesh.vertices)
+                    points = normalizePointArray(points)
+                    retrieval_mesh.vertices = o3d.utility.Vector3dVector(
+                        points)
+                    retrieval_mesh.translate([1, 0, 0])
 
-            points = np.array(cad_mesh.vertices)
-            points = normalizePointArray(points)
-            cad_mesh.vertices = o3d.utility.Vector3dVector(points)
-            cad_mesh.translate([2, 0, 0])
+                    points = np.array(cad_mesh.vertices)
+                    points = normalizePointArray(points)
+                    cad_mesh.vertices = o3d.utility.Vector3dVector(points)
+                    cad_mesh.translate([2, 0, 0])
 
-            o3d.visualization.draw_geometries(
-                [object_pcd, retrieval_mesh, cad_mesh])
+                    o3d.visualization.draw_geometries(
+                        [object_pcd, retrieval_mesh, cad_mesh])
         return True
 
     def generateSceneRetrievalResultByLabel(self,
@@ -183,36 +191,41 @@ class S2CRetrievalManager(RetrievalManager):
             object_feature, object_mask = getPointsFeature(
                 object_points, False)
 
-            cad_model_file_path = getObjectRetrievalResult(
+            cad_model_file_path_list = getObjectRetrievalResult(
                 object_feature, object_mask, cad_feature_array, cad_mask_array,
-                cad_file_path_list, print_progress)
+                cad_file_path_list, self.retrieval_num, print_progress)
 
             if render:
+                for cad_model_file_path in cad_model_file_path_list:
+                    retrieval_mesh = o3d.io.read_triangle_mesh(
+                        cad_model_file_path)
+                    points = np.array(retrieval_mesh.vertices)
+                    points = normalizePointArray(points)
+                    points = transPoints(points, retrieval_trans_matrix)
+                    retrieval_mesh.vertices = o3d.utility.Vector3dVector(
+                        points)
+                    retrieval_mesh.translate([1, 0, 0])
+
+                    points = np.array(cad_mesh.vertices)
+                    points = normalizePointArray(points)
+                    cad_mesh.vertices = o3d.utility.Vector3dVector(points)
+                    cad_mesh.translate([2, 0, 0])
+
+                    o3d.visualization.draw_geometries(
+                        [object_pcd, retrieval_mesh, cad_mesh])
+
+            for j, cad_model_file_path in enumerate(cad_model_file_path_list):
                 retrieval_mesh = o3d.io.read_triangle_mesh(cad_model_file_path)
                 points = np.array(retrieval_mesh.vertices)
                 points = normalizePointArray(points)
                 points = transPoints(points, retrieval_trans_matrix)
                 retrieval_mesh.vertices = o3d.utility.Vector3dVector(points)
-                retrieval_mesh.translate([1, 0, 0])
 
-                points = np.array(cad_mesh.vertices)
-                points = normalizePointArray(points)
-                cad_mesh.vertices = o3d.utility.Vector3dVector(points)
-                cad_mesh.translate([2, 0, 0])
+                retrieval_mesh.compute_triangle_normals()
 
-                o3d.visualization.draw_geometries(
-                    [object_pcd, retrieval_mesh, cad_mesh])
-
-            retrieval_mesh = o3d.io.read_triangle_mesh(cad_model_file_path)
-            points = np.array(retrieval_mesh.vertices)
-            points = normalizePointArray(points)
-            points = transPoints(points, retrieval_trans_matrix)
-            retrieval_mesh.vertices = o3d.utility.Vector3dVector(points)
-
-            retrieval_mesh.compute_triangle_normals()
-
-            save_file_path = save_folder_path + str(i) + ".ply"
-            o3d.io.write_triangle_mesh(save_file_path, retrieval_mesh)
+                save_file_path = save_folder_path + str(i) + "_" + str(
+                    j) + ".ply"
+                o3d.io.write_triangle_mesh(save_file_path, retrieval_mesh)
         return True
 
     def generateSceneRetrievalResult(self,

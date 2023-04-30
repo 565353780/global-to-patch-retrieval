@@ -122,12 +122,23 @@ def getObjectRetrievalResult(object_source_feature,
                              cad_feature_array,
                              cad_mask_array,
                              cad_model_file_path_list,
+                             retrieval_num=1,
                              print_progress=False,
                              with_pool=True):
+    assert retrieval_num > 0
+
     error_list = getObjectCADErrorList(object_source_feature, object_mask,
                                        cad_feature_array, cad_mask_array,
                                        print_progress, with_pool)
 
-    min_error_idx = np.argmin(error_list)
-    min_error_cad_model_file_path = cad_model_file_path_list[min_error_idx]
-    return min_error_cad_model_file_path
+    if retrieval_num > len(error_list):
+        retrieval_num = len(error_list)
+
+    min_error_idx_list = np.argpartition(error_list,
+                                         -retrieval_num)[-retrieval_num:]
+    sorted_min_error_idx_list = np.argsort(
+        error_list[min_error_idx_list])[::-1]
+
+    min_error_cad_model_file_path_list = cad_model_file_path_list[
+        sorted_min_error_idx_list]
+    return min_error_cad_model_file_path_list
