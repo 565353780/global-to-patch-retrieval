@@ -135,10 +135,11 @@ def getObjectRetrievalResult(object_source_feature,
         retrieval_num = len(error_list)
 
     min_error_idx_list = np.argpartition(error_list,
-                                         -retrieval_num)[-retrieval_num:]
-    sorted_min_error_idx_list = np.argsort(
-        error_list[min_error_idx_list])[::-1]
+                                         retrieval_num)[:retrieval_num]
+    sorted_min_error_idx_list = min_error_idx_list[np.argsort(
+        np.array(error_list, dtype=float)[min_error_idx_list])]
 
-    min_error_cad_model_file_path_list = cad_model_file_path_list[
-        sorted_min_error_idx_list]
+    min_error_cad_model_file_path_list = [
+        cad_model_file_path_list[idx] for idx in sorted_min_error_idx_list
+    ]
     return min_error_cad_model_file_path_list
