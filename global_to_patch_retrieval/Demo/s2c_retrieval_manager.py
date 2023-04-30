@@ -35,6 +35,10 @@ def demo():
         'scene0054_00', 'scene0673_04'
     ]
 
+    s2c_retrieval_manager.generateSceneRetrievalResult(
+        valid_scene_name_list[1], print_progress)
+    return
+
     for scannet_scene_name in valid_scene_name_list[-4:]:
         s2c_retrieval_manager.generateSceneRetrievalResult(
             scannet_scene_name, print_progress)
