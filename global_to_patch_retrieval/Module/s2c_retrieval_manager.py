@@ -215,6 +215,9 @@ class S2CRetrievalManager(RetrievalManager):
                         [object_pcd, retrieval_mesh, cad_mesh])
 
             for j, cad_model_file_path in enumerate(cad_model_file_path_list):
+                current_save_folder_path = save_folder_path + str(j) + '/'
+                os.makedirs(current_save_folder_path, exist_ok=True)
+
                 retrieval_mesh = o3d.io.read_triangle_mesh(cad_model_file_path)
                 points = np.array(retrieval_mesh.vertices)
                 points = normalizePointArray(points)
@@ -223,7 +226,7 @@ class S2CRetrievalManager(RetrievalManager):
 
                 retrieval_mesh.compute_triangle_normals()
 
-                save_file_path = save_folder_path + str(i) + "_" + str(
+                save_file_path = current_save_folder_path + str(i) + "_" + str(
                     j) + ".ply"
                 o3d.io.write_triangle_mesh(save_file_path, retrieval_mesh)
         return True
